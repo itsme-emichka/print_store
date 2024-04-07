@@ -10,6 +10,8 @@ class PyUserModelIn(BaseModel):
 class PyUserModeOut(BaseModel):
     username: str
     email: EmailStr
+    is_superuser: bool
+    is_active: bool
 
 
 class TokenOut(BaseModel):

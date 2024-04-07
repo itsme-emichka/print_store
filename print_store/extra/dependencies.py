@@ -9,7 +9,7 @@ from extra.services import get_instance_or_404
 from models.users import User
 
 
-async def is_authenticated(Authorization: Annotated[str, Header()]) -> str:
+async def is_authenticated(Authorization: Annotated[str, Header()]) -> User:
     token_type, token = Authorization.split()
     if not token_type == TOKEN_TYPE:
         raise AuthError

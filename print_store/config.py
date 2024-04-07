@@ -6,12 +6,24 @@ from dotenv import load_dotenv
 
 load_dotenv(override=True)
 
+BASE_DIR: Path = Path(__file__).resolve().parent
+
 SECRET_KEY: str = os.getenv('SECRET_KEY')
+
+ALLOWED_ORIGINS = (
+    'http://127.0.0.1:8000',
+    'http://127.0.0.1',
+    'http://localhost',
+    'http://localhost:8000',
+    'http://localhost:8080',
+)
+
+# TOKEN
 ACCESS_TOKEN_EXPIRE_DAYS = 7
 ALGORITHM = "HS256"
 TOKEN_TYPE: str = 'Bearer'
 
-BASE_DIR: Path = Path(__file__).resolve().parent
+# MEDIA
 MEDIA_URL: str = 'media/'
 MEDIA_ROOT: Path = BASE_DIR / MEDIA_URL
 PROTOCOL: str = 'http'

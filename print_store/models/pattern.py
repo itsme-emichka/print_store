@@ -71,6 +71,12 @@ class PatternVariation(BaseModel):
         null=True,
         on_delete=OnDelete.SET_NULL,
     )
+    parent_pattern = fields.ForeignKeyField(
+        'models.Pattern',
+        description='Родительский паттерн',
+        related_name='variations',
+        on_delete=OnDelete.CASCADE,
+    )
 
 
 class Color(BaseModel):

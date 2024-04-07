@@ -1,16 +1,18 @@
-import os
 from typing import Annotated
 
 from fastapi import APIRouter, Depends
 from tortoise.exceptions import IntegrityError
 
 from models.users import User
-from py_models.users import PyUserModelIn, PyUserModeOut
-from extra.utils import get_password_hash
+from schemas.users import PyUserModelIn, PyUserModeOut
 from routers import auth
-from extra.http_exceptions import UserAlreadyExistsError
-from extra.services import get_instance, create_instance
-from dependencies.users import is_authenticated
+from extra.services import (
+    get_instance,
+    get_list_of_objects,
+    create_user as create_db_user,
+)
+from extra.http_exceptions import AlreadyExistsError
+from extra.dependencies import is_authenticated
 
 
 router = APIRouter(prefix='/users')
@@ -20,20 +22,21 @@ router.include_router(auth.router)
 @router.post('/')
 async def create_user(user: PyUserModelIn) -> PyUserModeOut:
     if await get_instance(User, username=user.username, email=user.email):
-        raise UserAlreadyExistsError
-    salt = os.urandom(64)
-    hashed_password = get_password_hash(user.password, salt)
+        raise AlreadyExistsError
     try:
-        user_obj = await create_instance(
-            User,
+        return await create_db_user(
             username=user.username,
             email=user.email,
-            password=hashed_password,
-            salt=salt,
+            password=user.password,
+            is_active=True,
         )
-        return user_obj
     except IntegrityError:
-        raise UserAlreadyExistsError
+        raise AlreadyExistsError
+
+
+@router.get('/')
+async def get_user_list() -> list[PyUserModeOut]:
+    return await get_list_of_objects(User)
 
 
 @router.get('/me')

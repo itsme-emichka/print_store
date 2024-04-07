@@ -1,19 +1,13 @@
 from datetime import timedelta, datetime
-import hashlib
 
 from jose import jwt
+import bcrypt
 
 from config import SECRET_KEY, ALGORITHM
 
 
-def get_password_hash(password: str, salt: bytes) -> bytes:
-    return hashlib.pbkdf2_hmac(
-        'sha256',
-        password.encode('utf8'),
-        salt,
-        100000,
-        512,
-    )
+def get_password_hash(password: str) -> bytes:
+    return bcrypt.hashpw(password.encode(), bcrypt.gensalt())
 
 
 def create_access_token(data: dict, expires_delta: timedelta | None = None):
