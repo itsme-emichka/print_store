@@ -5,6 +5,7 @@ from tortoise.exceptions import IntegrityError
 from extra.http_exceptions import Error404, AlreadyExistsError
 from extra.utils import get_password_hash
 from models.users import User
+from models.pattern import Pattern
 
 
 async def create_instance(model: Model, **kwargs) -> QuerySetSingle:
@@ -28,7 +29,7 @@ async def get_instance(model: Model, **kwargs) -> QuerySetSingle:
 async def get_list_of_objects(model: Model, **kwargs) -> QuerySet:
     if not kwargs:
         return await model.all()
-    return model.filter(**kwargs)
+    return await model.filter(**kwargs)
 
 
 async def create_user(
@@ -47,3 +48,7 @@ async def create_user(
         is_superuser=is_superuser,
         is_active=is_active,
     )
+
+
+async def get_parent_pattern(parrent_id: int) -> Pattern:
+    return await Pattern.all().select_related('category').filter(id=parrent_id).first()

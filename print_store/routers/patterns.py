@@ -12,10 +12,16 @@ from models.pattern import (
 from extra.services import (
     get_list_of_objects,
     get_instance_or_404,
-    create_instance
+    create_instance,
+    get_parent_pattern,
 )
 from extra.utils import save_image_from_base64
-from schemas.patterns import GetPatternSchema, CreatePatternSchema, CategorySchema, PatternVariationSchema
+from schemas.patterns import (
+    GetPatternSchema,
+    CreatePatternSchema,
+    CategorySchema,
+    PatternVariationSchema
+)
 
 
 router = APIRouter(prefix='/pattern')
@@ -23,13 +29,21 @@ router = APIRouter(prefix='/pattern')
 
 @router.get('/{pattern_id}')
 async def get_pattern(pattern_id: int) -> GetPatternSchema:
-    parent_pattern = await Pattern.all().select_related('category').get(id=pattern_id)
-    category = parent_pattern.category
-    variations = await PatternVariation.filter(parent_pattern=parent_pattern)
+    parent_pattern = await get_parent_pattern(pattern_id)
+    variations = await get_list_of_objects(
+        PatternVariation,
+        parent_pattern=parent_pattern
+    )
     vas = []
     for variation in variations:
-        colors = await Color.filter(pattern_color__pattern=variation)
-        images = await Image.filter(pattern_image__pattern=variation)
+        colors = await get_list_of_objects(
+            Color,
+            pattern_color__pattern=variation
+        )
+        images = await get_list_of_objects(
+            Image,
+            pattern_image__pattern=variation
+        )
         vas.append(PatternVariationSchema(colors=colors, images=images))
 
     return GetPatternSchema(
@@ -37,14 +51,16 @@ async def get_pattern(pattern_id: int) -> GetPatternSchema:
             name=parent_pattern.name,
             slug=parent_pattern.slug,
             price=parent_pattern.price,
-            category=CategorySchema.from_orm(category),
+            category=CategorySchema.from_orm(parent_pattern.category),
             variations=vas
     )
 
 
-
 @router.post('/')
-async def create_pattern(body: CreatePatternSchema, request: Request) -> GetPatternSchema:
+async def create_pattern(
+    body: CreatePatternSchema,
+    request: Request
+) -> GetPatternSchema:
     category = await get_instance_or_404(Category, slug=body.category)
 
     parent_pattern = await create_instance(
@@ -95,18 +111,14 @@ async def create_pattern(body: CreatePatternSchema, request: Request) -> GetPatt
         await PatternColor.bulk_create(pattern_colors)
         await PatternImage.bulk_create(pattern_images)
 
-        variations.append({'colors': colors_list, 'images': images_list})
+        variations.append(
+            PatternVariationSchema(colors=colors_list, images=images_list))
 
-    return {
-        'id': parent_pattern.id,
-        'name': parent_pattern.name,
-        'slug': parent_pattern.slug,
-        'price': parent_pattern.price,
-        'category': category,
-        'variations': variations
-    }
-
-
-@router.get('/{pattern_id}')
-async def get_pattern(pattern_id: int) -> GetPatternSchema:
-    return await get_instance_or_404(Pattern, id=pattern_id)
+    return GetPatternSchema(
+        id=parent_pattern.id,
+        name=parent_pattern.name,
+        slug=parent_pattern.slug,
+        price=parent_pattern.price,
+        category=CategorySchema.from_orm(category),
+        variations=variations
+    )
