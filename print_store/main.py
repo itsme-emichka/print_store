@@ -1,5 +1,4 @@
-from fastapi import FastAPI
-from fastapi.responses import FileResponse
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from tortoise.contrib.fastapi import register_tortoise
 from fastadmin import fastapi_app as admin_app
@@ -10,7 +9,7 @@ from database.db import TORTOISE_ORM
 from config import ALLOWED_ORIGINS
 
 
-load_dotenv()
+load_dotenv(override=True)
 
 
 app = FastAPI()
@@ -35,8 +34,3 @@ register_tortoise(
     generate_schemas=True,
     add_exception_handlers=True,
 )
-
-
-@app.get("/", response_class=FileResponse)
-async def main():
-    return FileResponse('index.html')

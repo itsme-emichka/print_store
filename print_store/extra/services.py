@@ -25,8 +25,10 @@ async def get_instance(model: Model, **kwargs) -> QuerySetSingle:
     return await model.get_or_none(**kwargs)
 
 
-async def get_list_of_objects(model: Model) -> QuerySet:
-    return await model.all()
+async def get_list_of_objects(model: Model, **kwargs) -> QuerySet:
+    if not kwargs:
+        return await model.all()
+    return model.filter(**kwargs)
 
 
 async def create_user(

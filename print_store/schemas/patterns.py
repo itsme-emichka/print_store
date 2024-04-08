@@ -3,22 +3,76 @@ from typing import Annotated
 from pydantic import BaseModel
 from fastapi import Query
 
-from config import SLUG_PATTERN
-from schemas.abstract import AbstractId
+from config import SLUG_PATTERN, HEX_PATTERN, BASE64_PATTERN
 
 
-class PatternVariation(BaseModel):
-    colors: list[int] | None
-    images: list[int] | None
+# POST
+
+class ImageCreationSchema(BaseModel):
+    is_main: bool = False
+    base_64: Annotated[str, Query(pattern=BASE64_PATTERN)]
+
+
+class ColorCreationSchema(BaseModel):
+    slug: Annotated[str, Query(pattern=SLUG_PATTERN)]
+
+
+class PatternVariationCreationSchema(BaseModel):
+    colors: list[ColorCreationSchema]
+    images: list[ImageCreationSchema]
 
 
 class CreatePatternSchema(BaseModel):
-    name: str | None
-    slug: Annotated[str, Query(pattern=SLUG_PATTERN)] | None
+    name: str | None = None
+    slug: Annotated[str | None, Query(pattern=SLUG_PATTERN)] = None
     category: Annotated[str, Query(pattern=SLUG_PATTERN)]
     price: int
-    variations: list[PatternVariation] | None
+    variations: list[PatternVariationCreationSchema]
 
 
-class GetPatternSchema(CreatePatternSchema, AbstractId):
-    pass
+# GET
+
+class CategorySchema(BaseModel):
+    name: str
+    slug: Annotated[str, Query(pattern=SLUG_PATTERN)]
+
+    class Config:
+        orm_mode = True
+
+
+class ColorSchema(BaseModel):
+    name: str
+    slug: Annotated[str, Query(pattern=SLUG_PATTERN)]
+    hex: Annotated[str, Query(pattern=HEX_PATTERN)]
+
+    class Config:
+        orm_mode = True
+
+
+class ImageSchema(BaseModel):
+    name: str | None = None
+    image_url: str
+    is_main: bool = False
+
+    class Config:
+        orm_mode = True
+
+
+class PatternVariationSchema(BaseModel):
+    colors: list[ColorSchema]
+    images: list[ImageSchema]
+
+    class Config:
+        orm_mode = True
+
+
+class GetPatternSchema(BaseModel):
+    id: int
+    name: str
+    slug: Annotated[str | None, Query(pattern=SLUG_PATTERN)] = None
+    price: int
+    category: CategorySchema
+    variations: list[PatternVariationSchema]
+
+    class Config:
+        orm_mode = True

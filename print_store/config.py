@@ -36,6 +36,7 @@ POSTGRES_HOST = os.getenv('POSTGRES_HOST')
 POSTGRES_PORT = os.getenv('POSTGRES_PORT')
 
 # REGEX_PATTERNS
-SLUG_PATTERN: str = r'^[-|_a-z0-9]*$'
+SLUG_PATTERN: str = r'^[-_a-z0-9]*$'
 EMAIL_PATTERN: str = r'[^@ \t\r\n]+@[^@ \t\r\n]+\.[^@ \t\r\n]+'
 BASE64_PATTERN: str = r'^data:image/(png|jpeg|jpg);base64,.+$'
+HEX_PATTERN: str = r'^#[a-z0-9]{6}$'

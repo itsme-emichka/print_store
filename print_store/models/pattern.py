@@ -4,6 +4,7 @@ from tortoise import fields
 from tortoise.models import Model
 from tortoise.validators import RegexValidator
 from tortoise.fields.base import OnDelete
+from fastadmin import TortoiseModelAdmin, register
 
 
 class BaseModel(Model):
@@ -110,6 +111,7 @@ class Image(BaseModel):
             description='Название цвета',
             max_length=512,
             unique=True,
+            null=True,
     )
     image_url = fields.CharField(
         max_length=1024,
@@ -126,3 +128,13 @@ class PatternImage(BaseModel):
         'models.Image',
         related_name='pattern_image',
     )
+
+
+@register(Color)
+class ColorAdmin(TortoiseModelAdmin):
+    list_display = ('name', 'slug', 'hex',)
+
+
+@register(Category)
+class CategoryAdmin(TortoiseModelAdmin):
+    list_display = ('name', 'slug',)
