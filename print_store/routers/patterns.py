@@ -10,7 +10,6 @@ from models.pattern import (
     Image
 )
 from extra.services import (
-    get_list_of_objects,
     create_instance,
     get_parent_pattern,
 )
@@ -19,40 +18,12 @@ from schemas.patterns import (
     GetPatternSchema,
     CreatePatternSchema,
     CategorySchema,
-    PatternVariationSchema
+    PatternVariationSchema,
+    PatternVariationCreationSchema,
 )
 
 
 router = APIRouter(prefix='/pattern')
-
-
-@router.get('/{pattern_id}')
-async def get_pattern(pattern_id: int) -> GetPatternSchema:
-    parent_pattern = await get_parent_pattern(pattern_id)
-    variations = await get_list_of_objects(
-        PatternVariation,
-        parent_pattern=parent_pattern
-    )
-    vas = []
-    for variation in variations:
-        colors = await get_list_of_objects(
-            Color,
-            pattern_color__pattern=variation
-        )
-        images = await get_list_of_objects(
-            Image,
-            pattern_image__pattern=variation
-        )
-        vas.append(PatternVariationSchema(colors=colors, images=images))
-
-    return GetPatternSchema(
-            id=parent_pattern.id,
-            name=parent_pattern.name,
-            slug=parent_pattern.slug,
-            price=parent_pattern.price,
-            category=CategorySchema.from_orm(parent_pattern.category),
-            variations=vas
-    )
 
 
 @router.post('/')
@@ -123,3 +94,37 @@ async def create_pattern(
         category=CategorySchema.from_orm(category),
         variations=variations
     )
+
+
+@router.get('/')
+async def get_list_of_patterns() -> list[GetPatternSchema]:
+    pass
+
+
+@router.get('/{pattern_id}')
+async def get_pattern(pattern_id: int) -> GetPatternSchema:
+    parent_pattern = await get_parent_pattern(pattern_id)
+    vas = []
+    for variation in await parent_pattern.variations.all():
+        print(variation.id)
+        vas.append(PatternVariationSchema(
+            colors=await variation.colors,
+            images=await variation.images)
+        )
+
+    return GetPatternSchema(
+            id=parent_pattern.id,
+            name=parent_pattern.name,
+            slug=parent_pattern.slug,
+            price=parent_pattern.price,
+            category=CategorySchema.from_orm(parent_pattern.category),
+            variations=vas
+    )
+
+
+@router.post('/{pattern_id}/variation/')
+async def add_variation(
+    pattern_id: int,
+    body: PatternVariationCreationSchema
+) -> PatternVariationSchema:
+    pass

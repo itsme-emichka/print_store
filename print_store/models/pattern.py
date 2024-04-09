@@ -74,30 +74,40 @@ class Pattern(BaseModel):
         max_digits=16,
         decimal_places=2,
     )
+    variations: fields.ReverseRelation['PatternVariation']
 
 
 class PatternVariation(BaseModel):
-    colors = fields.ManyToManyField(
-        'models.Color',
-        through='PatternColor',
-        description='Образец паттерна в определенном цвете',
-        related_name='pattern',
-        on_delete=OnDelete.CASCADE,
-    )
-    images = fields.ManyToManyField(
-        'models.Image',
-        through='PatternImage',
-        description='Картинки паттерна в определенном цвете',
-        related_name='pattern',
-        null=True,
-        on_delete=OnDelete.SET_NULL,
-    )
+    # colors: fields.ManyToManyRelation['Color'] = fields.ManyToManyField(
+    #     'models.Color',
+    #     through='PatternColor',
+    #     description='Образец паттерна в определенном цвете',
+    #     related_name='pattern',
+    #     on_delete=OnDelete.CASCADE,
+    # )
+    # images = fields.ManyToManyField(
+    #     'models.Image',
+    #     through='PatternImage',
+    #     description='Картинки паттерна в определенном цвете',
+    #     related_name='pattern',
+    #     null=True,
+    #     on_delete=OnDelete.SET_NULL,
+    # )
     parent_pattern = fields.ForeignKeyField(
         'models.Pattern',
         description='Родительский паттерн',
         related_name='variations',
+        to_field='id',
         on_delete=OnDelete.CASCADE,
     )
+
+    @property
+    async def colors(self):
+        return await Color.filter(pattern_color__pattern=self)
+
+    @property
+    async def images(self):
+        return await Image.filter(pattern_image__pattern=self)
 
 
 class Color(BaseModel):
