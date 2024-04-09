@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Request, HTTPException, status
 
 from models.pattern import (
     Pattern,
@@ -11,11 +11,11 @@ from models.pattern import (
 )
 from extra.services import (
     get_list_of_objects,
-    get_instance_or_404,
     create_instance,
     get_parent_pattern,
 )
 from extra.utils import save_image_from_base64
+from extra.http_exceptions import Error404
 from schemas.patterns import (
     GetPatternSchema,
     CreatePatternSchema,
@@ -61,7 +61,13 @@ async def create_pattern(
     body: CreatePatternSchema,
     request: Request
 ) -> GetPatternSchema:
-    category = await get_instance_or_404(Category, slug=body.category)
+    categories_by_slug = await Category.get_categories_by_slug()
+    category = categories_by_slug.get(body.category, None)
+    if not category:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail='Category not found'
+        )
 
     parent_pattern = await create_instance(
         Pattern,
@@ -71,11 +77,7 @@ async def create_pattern(
         category=category,
     )
 
-    all_colors = await get_list_of_objects(Color)
-    colors_by_slug = dict()
-    for color in all_colors:
-        colors_by_slug[str(color.slug)] = color
-
+    colors_by_slug = await Color.get_colors_by_slug()
     variations = []
 
     for variation_data in body.variations:

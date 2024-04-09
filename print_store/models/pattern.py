@@ -27,6 +27,26 @@ class Category(BaseModel):
         validators=[RegexValidator('^[-|_a-z0-9]*$', re.A)],
     )
 
+    categories_by_slug = dict()
+
+    @classmethod
+    async def get_categories_by_slug(cls) -> dict:
+        if not cls.categories_by_slug:
+            await cls.update_categories_by_slug()
+        return cls.categories_by_slug
+
+    @classmethod
+    async def update_categories_by_slug(cls):
+        for category in await cls.all():
+            cls.categories_by_slug[str(category.slug)] = category
+        return cls.categories_by_slug
+
+    @classmethod
+    async def create(cls, using_db=None, **kwargs):
+        instance = await super().create(using_db, **kwargs)
+        await cls.update_categories_by_slug()
+        return instance
+
 
 class Pattern(BaseModel):
     name = fields.CharField(
@@ -93,6 +113,26 @@ class Color(BaseModel):
         validators=[RegexValidator('^[-|_a-z0-9]*$', re.A)],
     )
     hex = fields.CharField(max_length=7)
+
+    colors_by_slug = dict()
+
+    @classmethod
+    async def get_colors_by_slug(cls) -> dict:
+        if not cls.colors_by_slug:
+            await cls.update_color_by_slug()
+        return cls.colors_by_slug
+
+    @classmethod
+    async def update_color_by_slug(cls):
+        for color in await cls.all():
+            cls.colors_by_slug[str(color.slug)] = color
+        return cls.colors_by_slug
+
+    @classmethod
+    async def create(cls, using_db=None, **kwargs):
+        instance = await super().create(using_db, **kwargs)
+        await cls.update_color_by_slug()
+        return instance
 
 
 class PatternColor(BaseModel):

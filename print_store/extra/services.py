@@ -8,7 +8,7 @@ from models.users import User
 from models.pattern import Pattern
 
 
-async def create_instance(model: Model, **kwargs) -> QuerySetSingle:
+async def create_instance(model: Model, **kwargs) -> QuerySetSingle | None:
     try:
         return await model.create(**kwargs)
     except IntegrityError:
@@ -51,4 +51,9 @@ async def create_user(
 
 
 async def get_parent_pattern(parrent_id: int) -> Pattern:
-    return await Pattern.all().select_related('category').filter(id=parrent_id).first()
+    return await Pattern.all(
+    ).select_related(
+        'category'
+    ).filter(
+        id=parrent_id
+    ).first()
