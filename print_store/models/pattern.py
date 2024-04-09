@@ -74,6 +74,11 @@ class Pattern(BaseModel):
         max_digits=16,
         decimal_places=2,
     )
+    cover = fields.CharField(
+        description='Обложка принта',
+        max_length=2048,
+        null=True,
+    )
     variations: fields.ReverseRelation['PatternVariation']
 
 

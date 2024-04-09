@@ -20,6 +20,7 @@ from schemas.patterns import (
     CategorySchema,
     PatternVariationSchema,
     PatternVariationCreationSchema,
+    ListPatternSchema,
 )
 
 
@@ -42,6 +43,7 @@ async def create_pattern(
     parent_pattern = await create_instance(
         Pattern,
         name=body.name,
+        cover=save_image_from_base64(body.cover),
         slug=body.slug,
         price=body.price,
         category=category,
@@ -97,8 +99,8 @@ async def create_pattern(
 
 
 @router.get('/')
-async def get_list_of_patterns() -> list[GetPatternSchema]:
-    pass
+async def get_list_of_patterns() -> list[ListPatternSchema]:
+    return await Pattern.all().select_related('category')
 
 
 @router.get('/{pattern_id}')
