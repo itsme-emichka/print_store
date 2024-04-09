@@ -15,7 +15,6 @@ from extra.services import (
     get_parent_pattern,
 )
 from extra.utils import save_image_from_base64
-from extra.http_exceptions import Error404
 from schemas.patterns import (
     GetPatternSchema,
     CreatePatternSchema,
