@@ -1,11 +1,12 @@
 from tortoise.models import Model
 from tortoise.queryset import QuerySet, QuerySetSingle
 from tortoise.exceptions import IntegrityError
+from tortoise.query_utils import Prefetch
 
 from extra.http_exceptions import Error404, AlreadyExistsError
 from extra.utils import get_password_hash
 from models.users import User
-from models.pattern import Pattern
+from models.pattern import Pattern, PatternVariation
 
 
 async def create_instance(model: Model, **kwargs) -> QuerySetSingle | None:
@@ -54,6 +55,12 @@ async def get_parent_pattern(parrent_id: int) -> Pattern:
     return await Pattern.all(
     ).select_related(
         'category'
+    ).prefetch_related(
+        Prefetch(
+            'variations',
+            queryset=PatternVariation.filter(parent_pattern_id=parrent_id),
+            to_attr='vars'
+        )
     ).filter(
         id=parrent_id
     ).first()

@@ -107,8 +107,7 @@ async def get_list_of_patterns() -> list[ListPatternSchema]:
 async def get_pattern(pattern_id: int) -> GetPatternSchema:
     parent_pattern = await get_parent_pattern(pattern_id)
     vas = []
-    for variation in await parent_pattern.variations.all():
-        print(variation.id)
+    for variation in parent_pattern.vars:
         vas.append(PatternVariationSchema(
             colors=await variation.colors,
             images=await variation.images)
