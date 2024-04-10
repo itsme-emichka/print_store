@@ -106,9 +106,9 @@ async def get_list_of_patterns() -> list[ListPatternSchema]:
 @router.get('/{pattern_id}')
 async def get_pattern(pattern_id: int) -> GetPatternSchema:
     parent_pattern = await get_parent_pattern(pattern_id)
-    vas = []
+    variations = []
     for variation in parent_pattern.vars:
-        vas.append(PatternVariationSchema(
+        variations.append(PatternVariationSchema(
             colors=await variation.colors,
             images=await variation.images)
         )
@@ -119,7 +119,7 @@ async def get_pattern(pattern_id: int) -> GetPatternSchema:
             slug=parent_pattern.slug,
             price=parent_pattern.price,
             category=CategorySchema.from_orm(parent_pattern.category),
-            variations=vas
+            variations=variations
     )
 
 
