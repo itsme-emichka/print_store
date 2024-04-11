@@ -234,3 +234,21 @@ class ColorAdmin(TortoiseModelAdmin):
 @register(Category)
 class CategoryAdmin(TortoiseModelAdmin):
     list_display = ('name', 'slug',)
+
+
+class UserShoppingCart(BaseModel):
+    user = fields.ForeignKeyField(
+        'models.User',
+        related_name='shopping_cart',
+    )
+    pattern_variation = fields.ForeignKeyField(
+        'models.PatternVariation',
+        related_name='shopping_cart',
+    )
+    material = fields.ForeignKeyField(
+        'models.Material',
+        related_name='shopping_cart',
+    )
+    amount = fields.IntField(
+        description='Количество товара в корзине',
+    )
