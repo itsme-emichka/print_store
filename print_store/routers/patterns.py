@@ -39,8 +39,12 @@ async def create_pattern(
     parent_pattern = await create_instance(
         Pattern,
         name=body.name,
-        cover=save_image_from_base64(body.cover, request.base_url),
         slug=body.slug,
+        article=body.article,
+        description=body.description,
+        horizontal_rapport=body.horizontal_rapport,
+        vertical_rapport=body.vertical_rapport,
+        cover=save_image_from_base64(body.cover, request.base_url),
         price=body.price,
         category=category,
     )
@@ -61,6 +65,10 @@ async def create_pattern(
         id=parent_pattern.id,
         name=parent_pattern.name,
         slug=parent_pattern.slug,
+        article=parent_pattern.article,
+        description=parent_pattern.description,
+        horizontal_rapport=parent_pattern.horizontal_rapport,
+        vertical_rapport=parent_pattern.vertical_rapport,
         price=parent_pattern.price,
         category=CategorySchema.from_orm(category),
         variations=variations
@@ -86,6 +94,10 @@ async def get_pattern(pattern_id: int) -> GetPatternSchema:
             id=parent_pattern.id,
             name=parent_pattern.name,
             slug=parent_pattern.slug,
+            article=parent_pattern.article,
+            description=parent_pattern.description,
+            horizontal_rapport=parent_pattern.horizontal_rapport,
+            vertical_rapport=parent_pattern.vertical_rapport,
             price=parent_pattern.price,
             category=CategorySchema.from_orm(parent_pattern.category),
             variations=variations

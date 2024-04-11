@@ -6,6 +6,8 @@ from tortoise.validators import RegexValidator
 from tortoise.fields.base import OnDelete
 from fastadmin import TortoiseModelAdmin, register
 
+from config import SLUG_PATTERN
+
 
 class BaseModel(Model):
     id = fields.BigIntField(pk=True)
@@ -24,7 +26,7 @@ class Category(BaseModel):
         description='Слаг категории принта',
         max_length=256,
         unique=True,
-        validators=[RegexValidator('^[-|_a-z0-9]*$', re.A)],
+        validators=[RegexValidator(SLUG_PATTERN, re.A)],
     )
 
     categories_by_slug = dict()
@@ -48,6 +50,30 @@ class Category(BaseModel):
         return instance
 
 
+class Material(BaseModel):
+    name = fields.CharField(
+        description='Название материала',
+        max_length=512,
+        unique=True
+    )
+    slug = fields.CharField(
+        description='Слаг материала',
+        max_length=256,
+        unique=True,
+        validators=[RegexValidator(SLUG_PATTERN, re.A)],
+    )
+    width = fields.IntField(
+        description='Ширина материала в мм',
+    )
+    density = fields.IntField(
+        description='Плотность материала в г/м^3',
+    )
+    article_marker = fields.CharField(
+        description='Добавка к артикулу обозначающая материал',
+        max_length=8,
+    )
+
+
 class Pattern(BaseModel):
     name = fields.CharField(
         description='Название принта',
@@ -55,11 +81,15 @@ class Pattern(BaseModel):
         unique=True,
         null=True,
     )
+    article = fields.CharField(
+        description='Артикул принта',
+        max_length=64,
+    )
     slug = fields.CharField(
         description='Слаг принта',
         max_length=256,
         unique=True,
-        validators=[RegexValidator('^[-|_a-z0-9]*$', re.A)],
+        validators=[RegexValidator(SLUG_PATTERN, re.A)],
         null=True,
     )
     category = fields.ForeignKeyField(
@@ -78,6 +108,17 @@ class Pattern(BaseModel):
         description='Обложка принта',
         max_length=2048,
         null=True,
+    )
+    description = fields.TextField(null=True)
+    horizontal_rapport = fields.DecimalField(
+        description='Горизонтальный раппорт в см',
+        max_digits=3,
+        decimal_places=1
+    )
+    vertical_rapport = fields.DecimalField(
+        description='Вертикальный раппорт в см',
+        max_digits=3,
+        decimal_places=1
     )
     variations: fields.ReverseRelation['PatternVariation']
 
@@ -125,7 +166,7 @@ class Color(BaseModel):
         description='Слаг цвета',
         max_length=256,
         unique=True,
-        validators=[RegexValidator('^[-|_a-z0-9]*$', re.A)],
+        validators=[RegexValidator(SLUG_PATTERN, re.A)],
     )
     hex = fields.CharField(max_length=7)
 

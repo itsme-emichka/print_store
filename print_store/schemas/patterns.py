@@ -24,8 +24,12 @@ class PatternVariationCreationSchema(BaseModel):
 
 class CreatePatternSchema(BaseModel):
     name: str | None = None
-    cover: Annotated[str | None, Query(pattern=BASE64_PATTERN)] = None
     slug: Annotated[str | None, Query(pattern=SLUG_PATTERN)] = None
+    article: str
+    description: str | None = None
+    horizontal_rapport: float
+    vertical_rapport: float
+    cover: Annotated[str | None, Query(pattern=BASE64_PATTERN)] = None
     category: Annotated[str, Query(pattern=SLUG_PATTERN)]
     price: int
     variations: list[PatternVariationCreationSchema]
@@ -70,8 +74,12 @@ class PatternVariationSchema(BaseModel):
 class GetPatternSchema(BaseModel):
     id: int
     name: str
-    cover: str | None = None
     slug: Annotated[str | None, Query(pattern=SLUG_PATTERN)] = None
+    article: str
+    description: str | None = None
+    horizontal_rapport: float
+    vertical_rapport: float
+    cover: str | None = None
     price: int
     category: CategorySchema
     variations: list[PatternVariationSchema]
