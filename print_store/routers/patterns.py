@@ -2,16 +2,12 @@ from fastapi import APIRouter, Request, HTTPException, status
 
 from models.pattern import (
     Pattern,
-    PatternVariation,
-    Color,
-    PatternColor,
-    PatternImage,
     Category,
-    Image
 )
 from extra.services import (
     create_instance,
     get_parent_pattern,
+    create_variation,
 )
 from extra.utils import save_image_from_base64
 from schemas.patterns import (
@@ -43,50 +39,23 @@ async def create_pattern(
     parent_pattern = await create_instance(
         Pattern,
         name=body.name,
-        cover=save_image_from_base64(body.cover),
+        cover=save_image_from_base64(body.cover, request.base_url),
         slug=body.slug,
         price=body.price,
         category=category,
     )
 
-    colors_by_slug = await Color.get_colors_by_slug()
     variations = []
 
     for variation_data in body.variations:
-        variation = await create_instance(
-            PatternVariation, parent_pattern=parent_pattern)
-
-        pattern_colors = []
-        colors_list = []
-
-        pattern_images = []
-        images_list = []
-
-        for color_data in variation_data.colors:
-            color = colors_by_slug.get(color_data.slug, None)
-            if not color:
-                print(f'Цвета {color_data.slug} нет в базе данных')
-                continue
-            pattern_colors.append(PatternColor(pattern=variation, color=color))
-            colors_list.append(color)
-
-        for image_data in variation_data.images:
-            img = await create_instance(
-                Image,
-                image_url=save_image_from_base64(
-                    image_data.base_64,
-                    request.base_url
-                ),
-                is_main=image_data.is_main
-            )
-            pattern_images.append(PatternImage(pattern=variation, image=img))
-            images_list.append(img)
-
-        await PatternColor.bulk_create(pattern_colors)
-        await PatternImage.bulk_create(pattern_images)
-
         variations.append(
-            PatternVariationSchema(colors=colors_list, images=images_list))
+            await create_variation(
+                parent_pattern.id,
+                variation_data.colors,
+                variation_data.images,
+                request.base_url,
+            )
+        )
 
     return GetPatternSchema(
         id=parent_pattern.id,
@@ -126,6 +95,12 @@ async def get_pattern(pattern_id: int) -> GetPatternSchema:
 @router.post('/{pattern_id}/variation/')
 async def add_variation(
     pattern_id: int,
-    body: PatternVariationCreationSchema
+    body: PatternVariationCreationSchema,
+    request: Request
 ) -> PatternVariationSchema:
-    pass
+    return await create_variation(
+        pattern_id,
+        body.colors,
+        body.images,
+        request.base_url,
+    )

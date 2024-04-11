@@ -24,6 +24,8 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
 
 
 def save_image_from_base64(base64_data: str, base_url: str) -> str:
+    if not base64_data:
+        return None
     format, imgstr = base64_data.split(';base64,')
     ext = format.split('/')[-1]
     img_name = sha256(imgstr.encode()).hexdigest()
