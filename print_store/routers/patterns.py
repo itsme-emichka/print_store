@@ -116,3 +116,17 @@ async def add_variation(
         body.images,
         request.base_url,
     )
+
+
+@router.get('/{pattern_id}/variation/')
+async def get_pattern_variation_list(
+    pattern_id: int
+) -> list[PatternVariationSchema]:
+    parent_pattern = await get_parent_pattern(pattern_id)
+    variations = []
+    for variation in parent_pattern.vars:
+        variations.append(PatternVariationSchema(
+            colors=await variation.colors,
+            images=await variation.images)
+        )
+    return variations
