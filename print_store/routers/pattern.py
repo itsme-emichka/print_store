@@ -15,6 +15,7 @@ from extra.utils import (
     save_image_from_base64,
     get_final_article_of_pattern_var
 )
+from extra.http_exceptions import Error404
 from schemas.patterns import (
     GetPatternSchema,
     CreatePatternSchema,
@@ -107,8 +108,14 @@ async def get_pattern(pattern_id: int) -> GetPatternSchema:
     parent_pattern = await get_parent_pattern(pattern_id)
     variations = []
     for variation in parent_pattern.vars:
+        final_article = get_final_article_of_pattern_var(
+            parent_pattern.article,
+            variation.number_of_variation,
+            parent_pattern.section.article_marker,
+        )
         variations.append(PatternVariationSchema(
             id=variation.id,
+            final_article=final_article,
             number_of_variation=variation.number_of_variation,
             colors=await variation.colors,
             images=await variation.images)
@@ -183,3 +190,67 @@ async def get_pattern_variation(
         colors=await variation.colors,
         images=await variation.images
     )
+
+
+@router.post(
+    '/{pattern_id}/variation/{pattern_variation_id}/cart/'
+)
+async def add_pattern_variation_to_cart(
+    request: Request,
+    pattern_id: int,
+    pattern_variation_id: int,
+    amount: int = 1
+):
+    cart = request.session.get('cart', None)
+    if not cart:
+        request.session['cart'] = dict()
+        cart = request.session.get('cart', None)
+
+    pattern_in_cart: dict[str, int] = cart.get(str(pattern_variation_id), None)
+    pattern = await get_pattern_variation(
+        pattern_id, pattern_variation_id
+    )
+    if not pattern_in_cart:
+        cart[pattern_variation_id] = {
+            'pattern_variation_id': pattern_variation_id,
+            'parent_pattern_id': pattern_id,
+            'final_article': pattern.final_article,
+            'amount': amount
+        }
+    else:
+        pattern_in_cart['amount'] = pattern_in_cart.get('amount') + amount
+
+    return request.session.get('cart')
+
+
+@router.delete(
+    '/{pattern_id}/variation/{pattern_variation_id}/cart/'
+)
+async def delete_pattern_variation_from_cart(
+    request: Request,
+    pattern_id: int,
+    pattern_variation_id: int,
+    amount: int | str = 1
+):
+    try:
+        cart: dict[str, int] = request.session['cart']
+        pattern_in_cart: dict[str, int] = cart[str(pattern_variation_id)]
+    except KeyError:
+        raise Error404
+
+    if amount == 'all':
+        request.session.pop('cart')
+        return
+
+    if isinstance(amount, str):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={'Wrong amount': "int or 'all' are available"}
+        )
+
+    final_amount = pattern_in_cart.get('amount') - amount
+    if final_amount <= 0:
+        cart.pop(str(pattern_variation_id))
+    pattern_in_cart['amount'] = final_amount
+
+    return request.session.get('cart')
