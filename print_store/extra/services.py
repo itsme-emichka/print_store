@@ -147,3 +147,17 @@ async def create_variation(
         colors=colors_list,
         images=images_list,
     )
+
+
+async def get_pattern_variation(id: int) -> PatternVariation:
+    variation = await PatternVariation.all(
+    ).select_related(
+        'parent_pattern'
+    ).select_related(
+        'parent_pattern__section'
+    ).get_or_none(id=id)
+
+    if not variation:
+        raise Error404
+
+    return variation

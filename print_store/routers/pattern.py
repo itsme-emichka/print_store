@@ -3,16 +3,18 @@ from fastapi import APIRouter, Request, HTTPException, status
 from models.pattern import (
     Pattern,
     Category,
-    PatternVariation,
     StoreSection
 )
 from extra.services import (
     create_instance,
     get_parent_pattern,
     create_variation,
-    get_instance_or_404,
+    get_pattern_variation as get_pattern_variation_db,
 )
-from extra.utils import save_image_from_base64
+from extra.utils import (
+    save_image_from_base64,
+    get_final_article_of_pattern_var
+)
 from schemas.patterns import (
     GetPatternSchema,
     CreatePatternSchema,
@@ -148,8 +150,14 @@ async def get_pattern_variation_list(
     parent_pattern = await get_parent_pattern(pattern_id)
     variations = []
     for variation in parent_pattern.vars:
+        final_article = get_final_article_of_pattern_var(
+            parent_pattern.article,
+            variation.number_of_variation,
+            parent_pattern.section.article_marker,
+        )
         variations.append(PatternVariationSchema(
             id=variation.id,
+            final_article=final_article,
             number_of_variation=variation.number_of_variation,
             colors=await variation.colors,
             images=await variation.images)
@@ -162,12 +170,15 @@ async def get_pattern_variation(
     pattern_id: int,
     pattern_variation_id: int,
 ) -> PatternVariationSchema:
-    variation = await get_instance_or_404(
-        PatternVariation,
-        id=pattern_variation_id,
+    variation = await get_pattern_variation_db(pattern_variation_id)
+    final_article = get_final_article_of_pattern_var(
+        variation.parent_pattern.article,
+        variation.number_of_variation,
+        variation.parent_pattern.section.article_marker
     )
     return PatternVariationSchema(
         id=variation.id,
+        final_article=final_article,
         number_of_variation=variation.number_of_variation,
         colors=await variation.colors,
         images=await variation.images

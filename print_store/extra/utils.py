@@ -39,3 +39,11 @@ def save_image_from_base64(base64_data: str, base_url: str) -> str:
 
 def generate_random_string(length: int) -> str:
     return ''.join(random.choices(string.ascii_letters, k=length))
+
+
+def get_final_article_of_pattern_var(
+    article: str,
+    number: str,
+    marker: str
+) -> str:
+    return f'{article}-{number}-{marker}'
