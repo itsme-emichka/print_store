@@ -24,7 +24,8 @@ from schemas.patterns import (
 async def create_instance(model: Model, **kwargs) -> QuerySetSingle | None:
     try:
         return await model.create(**kwargs)
-    except IntegrityError:
+    except IntegrityError as ex:
+        print(ex)
         raise AlreadyExistsError
 
 
@@ -67,6 +68,8 @@ async def get_parent_pattern(parrent_id: int) -> Pattern:
     return await Pattern.all(
     ).select_related(
         'category'
+    ).select_related(
+        'section'
     ).prefetch_related(
         Prefetch(
             'variations',
@@ -127,13 +130,20 @@ async def create_variation(
     parent_pattern_id: int,
     colors: list[ColorCreationSchema],
     images: list[ImageCreationSchema],
-    base_url: str
+    base_url: str,
+    number_of_variation: str
 ) -> PatternVariationSchema:
     variation = await create_instance(
         PatternVariation,
-        parent_pattern_id=parent_pattern_id
+        parent_pattern_id=parent_pattern_id,
+        number_of_variation=number_of_variation
     )
     colors_list = await add_colors_to_variation(variation, colors)
     images_list = await add_images_to_variation(variation, images, base_url)
 
-    return PatternVariationSchema(colors=colors_list, images=images_list)
+    return PatternVariationSchema(
+        id=variation.id,
+        number_of_variation=number_of_variation,
+        colors=colors_list,
+        images=images_list,
+    )

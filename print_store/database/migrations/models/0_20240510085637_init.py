@@ -30,14 +30,19 @@ CREATE TABLE IF NOT EXISTS "material" (
     "name" VARCHAR(512) NOT NULL UNIQUE,
     "slug" VARCHAR(256) NOT NULL UNIQUE,
     "width" INT NOT NULL,
-    "density" INT NOT NULL,
-    "article_marker" VARCHAR(8) NOT NULL
+    "density" INT NOT NULL
 );
 COMMENT ON COLUMN "material"."name" IS 'Название материала';
 COMMENT ON COLUMN "material"."slug" IS 'Слаг материала';
 COMMENT ON COLUMN "material"."width" IS 'Ширина материала в мм';
 COMMENT ON COLUMN "material"."density" IS 'Плотность материала в г/м^3';
-COMMENT ON COLUMN "material"."article_marker" IS 'Добавка к артикулу обозначающая материал';
+CREATE TABLE IF NOT EXISTS "storesection" (
+    "id" BIGSERIAL NOT NULL PRIMARY KEY,
+    "name" VARCHAR(512) NOT NULL UNIQUE,
+    "article_marker" VARCHAR(8) NOT NULL UNIQUE
+);
+COMMENT ON COLUMN "storesection"."name" IS 'Название раздела';
+COMMENT ON COLUMN "storesection"."article_marker" IS 'Маркер раздела';
 CREATE TABLE IF NOT EXISTS "pattern" (
     "id" BIGSERIAL NOT NULL PRIMARY KEY,
     "name" VARCHAR(512)  UNIQUE,
@@ -48,7 +53,8 @@ CREATE TABLE IF NOT EXISTS "pattern" (
     "description" TEXT,
     "horizontal_rapport" DECIMAL(3,1) NOT NULL,
     "vertical_rapport" DECIMAL(3,1) NOT NULL,
-    "category_id" BIGINT REFERENCES "category" ("id") ON DELETE SET NULL
+    "category_id" BIGINT REFERENCES "category" ("id") ON DELETE SET NULL,
+    "section_id" BIGINT NOT NULL REFERENCES "storesection" ("id") ON DELETE CASCADE
 );
 COMMENT ON COLUMN "pattern"."name" IS 'Название принта';
 COMMENT ON COLUMN "pattern"."article" IS 'Артикул принта';
@@ -60,8 +66,10 @@ COMMENT ON COLUMN "pattern"."vertical_rapport" IS 'Вертикальный ра
 COMMENT ON COLUMN "pattern"."category_id" IS 'Категория принта';
 CREATE TABLE IF NOT EXISTS "patternvariation" (
     "id" BIGSERIAL NOT NULL PRIMARY KEY,
+    "number_of_variation" VARCHAR(8) NOT NULL,
     "parent_pattern_id" BIGINT NOT NULL REFERENCES "pattern" ("id") ON DELETE CASCADE
 );
+COMMENT ON COLUMN "patternvariation"."number_of_variation" IS 'Номер цветовой вариации';
 COMMENT ON COLUMN "patternvariation"."parent_pattern_id" IS 'Родительский паттерн';
 CREATE TABLE IF NOT EXISTS "patterncolor" (
     "id" BIGSERIAL NOT NULL PRIMARY KEY,
@@ -82,6 +90,14 @@ CREATE TABLE IF NOT EXISTS "user" (
     "is_superuser" BOOL NOT NULL  DEFAULT False,
     "is_active" BOOL NOT NULL  DEFAULT False
 );
+CREATE TABLE IF NOT EXISTS "usershoppingcart" (
+    "id" BIGSERIAL NOT NULL PRIMARY KEY,
+    "amount" INT NOT NULL,
+    "material_id" BIGINT NOT NULL REFERENCES "material" ("id") ON DELETE CASCADE,
+    "pattern_variation_id" BIGINT NOT NULL REFERENCES "patternvariation" ("id") ON DELETE CASCADE,
+    "user_id" BIGINT NOT NULL REFERENCES "user" ("id") ON DELETE CASCADE
+);
+COMMENT ON COLUMN "usershoppingcart"."amount" IS 'Количество товара в корзине';
 CREATE TABLE IF NOT EXISTS "aerich" (
     "id" SERIAL NOT NULL PRIMARY KEY,
     "version" VARCHAR(255) NOT NULL,

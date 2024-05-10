@@ -18,11 +18,13 @@ class ColorCreationSchema(BaseModel):
 
 
 class PatternVariationCreationSchema(BaseModel):
+    number_of_variation: str
     colors: list[ColorCreationSchema]
     images: list[ImageCreationSchema]
 
 
 class CreatePatternSchema(BaseModel):
+    section: Annotated[str, Query(pattern=SLUG_PATTERN)]
     name: str | None = None
     slug: Annotated[str | None, Query(pattern=SLUG_PATTERN)] = None
     article: str
@@ -33,6 +35,12 @@ class CreatePatternSchema(BaseModel):
     category: Annotated[str, Query(pattern=SLUG_PATTERN)]
     price: int
     variations: list[PatternVariationCreationSchema]
+
+
+class CreateSectionSchema(BaseModel):
+    name: str
+    slug: Annotated[str, Query(pattern=SLUG_PATTERN)]
+    article_marker: str
 
 
 # GET
@@ -65,8 +73,16 @@ class ImageSchema(BaseModel):
 
 class PatternVariationSchema(BaseModel):
     id: int
+    number_of_variation: str
     colors: list[ColorSchema]
     images: list[ImageSchema]
+
+    class Config:
+        orm_mode = True
+
+
+class SectionSchema(CreateSectionSchema):
+    pass
 
     class Config:
         orm_mode = True
@@ -75,6 +91,7 @@ class PatternVariationSchema(BaseModel):
 class GetPatternSchema(BaseModel):
     id: int
     name: str
+    section: SectionSchema
     slug: Annotated[str | None, Query(pattern=SLUG_PATTERN)] = None
     article: str
     description: str | None = None
@@ -96,6 +113,7 @@ class ListPatternSchema(BaseModel):
     slug: Annotated[str | None, Query(pattern=SLUG_PATTERN)] = None
     price: int
     category: CategorySchema
+    section: SectionSchema
 
     class Config:
         orm_mode = True

@@ -14,7 +14,7 @@ router = APIRouter(prefix='/category')
 
 @router.post('/')
 async def create_category(body: CreateCategorySchema) -> GetCategorySchema:
-    return await create_instance(Category, **body.model_dump())
+    return await create_instance(Category, **body.dict())
 
 
 @router.get('/')

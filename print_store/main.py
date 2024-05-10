@@ -5,7 +5,7 @@ from fastadmin import fastapi_app as admin_app
 from dotenv import load_dotenv
 from starlette.middleware.sessions import SessionMiddleware
 
-from routers import users, patterns, category
+from routers import users, patterns, category, colour, section
 from database.db import TORTOISE_ORM
 from config import ALLOWED_ORIGINS, SECRET_KEY
 
@@ -20,6 +20,8 @@ app = FastAPI()
 app.include_router(users.router)
 app.include_router(patterns.router)
 app.include_router(category.router)
+app.include_router(colour.router)
+app.include_router(section.router)
 
 app.add_middleware(
     CORSMiddleware,

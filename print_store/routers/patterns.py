@@ -3,7 +3,8 @@ from fastapi import APIRouter, Request, HTTPException, status
 from models.pattern import (
     Pattern,
     Category,
-    PatternVariation
+    PatternVariation,
+    StoreSection
 )
 from extra.services import (
     create_instance,
@@ -19,6 +20,7 @@ from schemas.patterns import (
     PatternVariationSchema,
     PatternVariationCreationSchema,
     ListPatternSchema,
+    SectionSchema,
 )
 
 
@@ -38,8 +40,17 @@ async def create_pattern(
             detail='Category not found'
         )
 
+    sections_by_slug = await StoreSection.get_sections_by_slug()
+    section = sections_by_slug.get(body.section, None)
+    if not section:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail='Section not found'
+        )
+
     parent_pattern = await create_instance(
         Pattern,
+        section=section,
         name=body.name,
         slug=body.slug,
         article=body.article,
@@ -60,12 +71,14 @@ async def create_pattern(
                 variation_data.colors,
                 variation_data.images,
                 request.base_url,
+                variation_data.number_of_variation
             )
         )
 
     return GetPatternSchema(
         id=parent_pattern.id,
         name=parent_pattern.name,
+        section=SectionSchema.from_orm(section),
         slug=parent_pattern.slug,
         article=parent_pattern.article,
         description=parent_pattern.description,
@@ -79,7 +92,12 @@ async def create_pattern(
 
 @router.get('/')
 async def get_list_of_patterns() -> list[ListPatternSchema]:
-    return await Pattern.all().select_related('category')
+    return await Pattern.all(
+    ).select_related(
+        'category'
+    ).select_related(
+        'section'
+    )
 
 
 @router.get('/{pattern_id}')
@@ -89,21 +107,23 @@ async def get_pattern(pattern_id: int) -> GetPatternSchema:
     for variation in parent_pattern.vars:
         variations.append(PatternVariationSchema(
             id=variation.id,
+            number_of_variation=variation.number_of_variation,
             colors=await variation.colors,
             images=await variation.images)
         )
 
     return GetPatternSchema(
-            id=parent_pattern.id,
-            name=parent_pattern.name,
-            slug=parent_pattern.slug,
-            article=parent_pattern.article,
-            description=parent_pattern.description,
-            horizontal_rapport=parent_pattern.horizontal_rapport,
-            vertical_rapport=parent_pattern.vertical_rapport,
-            price=parent_pattern.price,
-            category=CategorySchema.from_orm(parent_pattern.category),
-            variations=variations
+        id=parent_pattern.id,
+        name=parent_pattern.name,
+        slug=parent_pattern.slug,
+        section=SectionSchema.from_orm(parent_pattern.section),
+        article=parent_pattern.article,
+        description=parent_pattern.description,
+        horizontal_rapport=parent_pattern.horizontal_rapport,
+        vertical_rapport=parent_pattern.vertical_rapport,
+        price=parent_pattern.price,
+        category=CategorySchema.from_orm(parent_pattern.category),
+        variations=variations
     )
 
 
@@ -130,6 +150,7 @@ async def get_pattern_variation_list(
     for variation in parent_pattern.vars:
         variations.append(PatternVariationSchema(
             id=variation.id,
+            number_of_variation=variation.number_of_variation,
             colors=await variation.colors,
             images=await variation.images)
         )
@@ -147,6 +168,7 @@ async def get_pattern_variation(
     )
     return PatternVariationSchema(
         id=variation.id,
+        number_of_variation=variation.number_of_variation,
         colors=await variation.colors,
         images=await variation.images
     )

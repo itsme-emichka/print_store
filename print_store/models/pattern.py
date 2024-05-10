@@ -16,6 +16,45 @@ class BaseModel(Model):
         abstract = True
 
 
+class StoreSection(BaseModel):
+    name = fields.CharField(
+        description='Название раздела',
+        max_length=512,
+        unique=True,
+    )
+    slug = fields.CharField(
+        description='Слаг раздела',
+        max_length=256,
+        unique=True,
+        validators=[RegexValidator(SLUG_PATTERN, re.A)],
+    )
+    article_marker = fields.CharField(
+        description='Маркер раздела',
+        max_length=8,
+        unique=True,
+    )
+
+    sections_by_slug = dict()
+
+    @classmethod
+    async def get_sections_by_slug(cls) -> dict:
+        if not cls.sections_by_slug:
+            await cls.update_sections_by_slug()
+        return cls.sections_by_slug
+
+    @classmethod
+    async def update_sections_by_slug(cls):
+        for section in await cls.all():
+            cls.sections_by_slug[str(section.slug)] = section
+        return cls.sections_by_slug
+
+    @classmethod
+    async def create(cls, using_db=None, **kwargs):
+        instance = await super().create(using_db, **kwargs)
+        await cls.update_sections_by_slug()
+        return instance
+
+
 class Category(BaseModel):
     name = fields.CharField(
         description='Название категории принта',
@@ -68,10 +107,6 @@ class Material(BaseModel):
     density = fields.IntField(
         description='Плотность материала в г/м^3',
     )
-    article_marker = fields.CharField(
-        description='Добавка к артикулу обозначающая материал',
-        max_length=8,
-    )
 
 
 class Pattern(BaseModel):
@@ -120,31 +155,24 @@ class Pattern(BaseModel):
         max_digits=3,
         decimal_places=1
     )
+    section = fields.ForeignKeyField(
+        'models.StoreSection',
+        related_name='pattern',
+    )
     variations: fields.ReverseRelation['PatternVariation']
 
 
 class PatternVariation(BaseModel):
-    # colors: fields.ManyToManyRelation['Color'] = fields.ManyToManyField(
-    #     'models.Color',
-    #     through='PatternColor',
-    #     description='Образец паттерна в определенном цвете',
-    #     related_name='pattern',
-    #     on_delete=OnDelete.CASCADE,
-    # )
-    # images = fields.ManyToManyField(
-    #     'models.Image',
-    #     through='PatternImage',
-    #     description='Картинки паттерна в определенном цвете',
-    #     related_name='pattern',
-    #     null=True,
-    #     on_delete=OnDelete.SET_NULL,
-    # )
     parent_pattern = fields.ForeignKeyField(
         'models.Pattern',
         description='Родительский паттерн',
         related_name='variations',
         to_field='id',
         on_delete=OnDelete.CASCADE,
+    )
+    number_of_variation = fields.CharField(
+        description='Номер цветовой вариации',
+        max_length=8,
     )
 
     @property
