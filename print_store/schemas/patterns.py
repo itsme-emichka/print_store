@@ -64,6 +64,7 @@ class ImageSchema(BaseModel):
 
 
 class PatternVariationSchema(BaseModel):
+    id: int
     colors: list[ColorSchema]
     images: list[ImageSchema]
 

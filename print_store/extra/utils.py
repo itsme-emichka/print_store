@@ -1,3 +1,5 @@
+import random
+import string
 import base64
 from datetime import timedelta, datetime
 from hashlib import sha256
@@ -33,3 +35,7 @@ def save_image_from_base64(base64_data: str, base_url: str) -> str:
     with open(MEDIA_ROOT / f'{img_name}.{ext}', 'wb') as file:
         file.write(base64.b64decode(imgstr))
     return image_url
+
+
+def generate_random_string(length: int) -> str:
+    return ''.join(random.choices(string.ascii_letters, k=length))

@@ -3,11 +3,13 @@ from fastapi import APIRouter, Request, HTTPException, status
 from models.pattern import (
     Pattern,
     Category,
+    PatternVariation
 )
 from extra.services import (
     create_instance,
     get_parent_pattern,
     create_variation,
+    get_instance_or_404,
 )
 from extra.utils import save_image_from_base64
 from schemas.patterns import (
@@ -86,6 +88,7 @@ async def get_pattern(pattern_id: int) -> GetPatternSchema:
     variations = []
     for variation in parent_pattern.vars:
         variations.append(PatternVariationSchema(
+            id=variation.id,
             colors=await variation.colors,
             images=await variation.images)
         )
@@ -126,7 +129,24 @@ async def get_pattern_variation_list(
     variations = []
     for variation in parent_pattern.vars:
         variations.append(PatternVariationSchema(
+            id=variation.id,
             colors=await variation.colors,
             images=await variation.images)
         )
     return variations
+
+
+@router.get('/{pattern_id}/variation/{pattern_variation_id}/')
+async def get_pattern_variation(
+    pattern_id: int,
+    pattern_variation_id: int,
+) -> PatternVariationSchema:
+    variation = await get_instance_or_404(
+        PatternVariation,
+        id=pattern_variation_id,
+    )
+    return PatternVariationSchema(
+        id=variation.id,
+        colors=await variation.colors,
+        images=await variation.images
+    )
