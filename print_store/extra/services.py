@@ -4,8 +4,7 @@ from tortoise.exceptions import IntegrityError
 from tortoise.query_utils import Prefetch
 
 from extra.http_exceptions import Error404, AlreadyExistsError
-from extra.utils import get_password_hash, save_image_from_base64
-from models.users import User
+from extra.utils import save_image_from_base64
 from models.pattern import (
     Pattern,
     PatternVariation,
@@ -44,24 +43,6 @@ async def get_list_of_objects(model: Model, **kwargs) -> QuerySet:
     if not kwargs:
         return await model.all()
     return await model.filter(**kwargs)
-
-
-async def create_user(
-    username: str,
-    email: str,
-    password: str,
-    is_superuser: bool = False,
-    is_active: bool = True
-) -> User:
-    hash_pass = get_password_hash(password)
-    return await create_instance(
-        User,
-        username=username,
-        email=email,
-        hash_password=hash_pass.decode(),
-        is_superuser=is_superuser,
-        is_active=is_active,
-    )
 
 
 async def get_parent_pattern(parrent_id: int) -> Pattern:

@@ -18,11 +18,6 @@ ALLOWED_ORIGINS = (
     'http://localhost:8080',
 )
 
-# TOKEN
-ACCESS_TOKEN_EXPIRE_DAYS = 7
-ALGORITHM = "HS256"
-TOKEN_TYPE: str = 'Bearer'
-
 # MEDIA
 MEDIA_URL: str = 'media/'
 MEDIA_ROOT: Path = BASE_DIR / MEDIA_URL
