@@ -4,7 +4,6 @@ from tortoise import fields
 from tortoise.models import Model
 from tortoise.validators import RegexValidator
 from tortoise.fields.base import OnDelete
-from fastadmin import TortoiseModelAdmin, register
 
 from config import SLUG_PATTERN
 
@@ -251,32 +250,4 @@ class PatternImage(BaseModel):
     image = fields.ForeignKeyField(
         'models.Image',
         related_name='pattern_image',
-    )
-
-
-@register(Color)
-class ColorAdmin(TortoiseModelAdmin):
-    list_display = ('name', 'slug', 'hex',)
-
-
-@register(Category)
-class CategoryAdmin(TortoiseModelAdmin):
-    list_display = ('name', 'slug',)
-
-
-class UserShoppingCart(BaseModel):
-    user = fields.ForeignKeyField(
-        'models.User',
-        related_name='shopping_cart',
-    )
-    pattern_variation = fields.ForeignKeyField(
-        'models.PatternVariation',
-        related_name='shopping_cart',
-    )
-    material = fields.ForeignKeyField(
-        'models.Material',
-        related_name='shopping_cart',
-    )
-    amount = fields.IntField(
-        description='Количество товара в корзине',
     )
