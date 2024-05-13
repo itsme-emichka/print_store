@@ -13,7 +13,8 @@ from extra.services import (
 )
 from extra.utils import (
     save_image_from_base64,
-    get_final_article_of_pattern_var
+    get_final_article_of_pattern_var,
+    update_total_price
 )
 from extra.http_exceptions import Error404
 from schemas.patterns import (
@@ -201,24 +202,29 @@ async def add_pattern_variation_to_cart(
     pattern_variation_id: int,
     amount: int = 1
 ):
-    cart = request.session.get('cart', None)
-    if not cart:
-        request.session['cart'] = dict()
-        cart = request.session.get('cart', None)
-
-    pattern_in_cart: dict[str, int] = cart.get(str(pattern_variation_id), None)
-    pattern = await get_pattern_variation(
-        pattern_id, pattern_variation_id
+    cart: dict = request.session.get('cart', None)
+    cart_items = cart.get('items')
+    pattern_in_cart: dict[str, int] = cart_items.get(str(pattern_variation_id))
+    pattern = await get_pattern_variation_db(pattern_id)
+    final_article = get_final_article_of_pattern_var(
+        pattern.parent_pattern.article,
+        pattern.number_of_variation,
+        pattern.parent_pattern.section.article_marker
     )
     if not pattern_in_cart:
-        cart[pattern_variation_id] = {
+        cart_items[pattern_variation_id] = {
             'pattern_variation_id': pattern_variation_id,
             'parent_pattern_id': pattern_id,
-            'final_article': pattern.final_article,
-            'amount': amount
+            'final_article': final_article,
+            'amount': amount,
+            'price': float(pattern.parent_pattern.price)
         }
     else:
         pattern_in_cart['amount'] = pattern_in_cart.get('amount') + amount
+        pattern_in_cart['price'] = (
+            float(pattern.parent_pattern.price) * pattern_in_cart['amount'])
+
+    cart['total_price'] = float(update_total_price(cart_items))
 
     return request.session.get('cart')
 
@@ -230,27 +236,28 @@ async def delete_pattern_variation_from_cart(
     request: Request,
     pattern_id: int,
     pattern_variation_id: int,
-    amount: int | str = 1
+    amount: int = 1,
+    clear: bool = False
 ):
     try:
         cart: dict[str, int] = request.session['cart']
-        pattern_in_cart: dict[str, int] = cart[str(pattern_variation_id)]
+        items = cart['items']
+        pattern_in_cart: dict[str, int] = items[str(pattern_variation_id)]
     except KeyError:
         raise Error404
 
-    if amount == 'all':
+    pattern = await get_pattern_variation_db(pattern_variation_id)
+
+    if clear:
         request.session.pop('cart')
         return
 
-    if isinstance(amount, str):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail={'Wrong amount': "int or 'all' are available"}
-        )
-
     final_amount = pattern_in_cart.get('amount') - amount
     if final_amount <= 0:
-        cart.pop(str(pattern_variation_id))
+        items.pop(str(pattern_variation_id))
     pattern_in_cart['amount'] = final_amount
+    pattern_in_cart['price'] = (
+        final_amount * float(pattern.parent_pattern.price))
+    cart['total_price'] = update_total_price(cart['items'])
 
     return request.session.get('cart')

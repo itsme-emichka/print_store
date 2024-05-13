@@ -1,12 +1,10 @@
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from tortoise.contrib.fastapi import register_tortoise
-from fastadmin import fastapi_app as admin_app
 from dotenv import load_dotenv
 from starlette.middleware.sessions import SessionMiddleware
 
-from routers import pattern
-from routers import characteristics
+from routers import characteristics, pattern, order
 from database.db import TORTOISE_ORM
 from config import ALLOWED_ORIGINS, SECRET_KEY
 
@@ -20,6 +18,7 @@ app = FastAPI()
 
 app.include_router(pattern.router)
 app.include_router(characteristics.router)
+app.include_router(order.router)
 
 
 app.add_middleware(
@@ -29,8 +28,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-app.mount('/admin', admin_app)
 
 register_tortoise(
     app,
@@ -43,9 +40,13 @@ register_tortoise(
 @app.middleware('http')
 async def session_middleware(request: Request, call_next):
     sesid = request.session.get('id')
+    cart = request.session.get('cart')
     if not sesid:
         sesid = generate_random_string(64)
         request.session['id'] = sesid
+    if not cart:
+        request.session['cart'] = {'items': dict(),
+                                   'total_price': 0}
     response: Response = await call_next(request)
 
     return response
