@@ -50,7 +50,7 @@ class CategorySchema(BaseModel):
     slug: Annotated[str, Query(pattern=SLUG_PATTERN)]
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class ColorSchema(BaseModel):
@@ -59,7 +59,7 @@ class ColorSchema(BaseModel):
     hex: Annotated[str, Query(pattern=HEX_PATTERN)]
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class ImageSchema(BaseModel):
@@ -68,7 +68,7 @@ class ImageSchema(BaseModel):
     is_main: bool = False
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class PatternVariationSchema(BaseModel):
@@ -79,14 +79,14 @@ class PatternVariationSchema(BaseModel):
     images: list[ImageSchema]
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class SectionSchema(CreateSectionSchema):
     pass
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class GetPatternSchema(BaseModel):
@@ -104,7 +104,7 @@ class GetPatternSchema(BaseModel):
     variations: list[PatternVariationSchema]
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class ListPatternSchema(BaseModel):
@@ -117,4 +117,4 @@ class ListPatternSchema(BaseModel):
     section: SectionSchema
 
     class Config:
-        orm_mode = True
+        from_attributes = True

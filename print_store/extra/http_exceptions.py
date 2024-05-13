@@ -19,3 +19,9 @@ WrongPasswordError = HTTPException(
     status_code=status.HTTP_400_BAD_REQUEST,
     detail='Неверный пароль',
 )
+
+
+MailingError = HTTPException(
+    status_code=status.HTTP_400_BAD_REQUEST,
+    detail='Mailing error'
+)

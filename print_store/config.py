@@ -35,3 +35,9 @@ SLUG_PATTERN: str = r'^[-_a-z0-9]*$'
 EMAIL_PATTERN: str = r'[^@ \t\r\n]+@[^@ \t\r\n]+\.[^@ \t\r\n]+'
 BASE64_PATTERN: str = r'^data:image/(png|jpeg|jpg);base64,.+$'
 HEX_PATTERN: str = r'^#[a-z0-9]{6}$'
+PHONE_NUMBER: str = r'^((8|\+7)[\- ]?)?(\(?\d{3}\)?[\- ]?)?[\d\- ]{7,10}$'
+
+# MAILING
+SENDER_EMAIL: str = os.getenv('SENDER_EMAIL')
+SENDER_PASSWORD: str = os.getenv('SENDER_PASSWORD')
+CORPORATE_MAIL: str = os.getenv('CORPORATE_MAIL')
