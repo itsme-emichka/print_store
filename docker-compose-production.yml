@@ -1,0 +1,45 @@
+version: '3.7'
+
+services:
+  db:
+    container_name: db
+    image: postgres:15
+    env_file:
+      - .env-prod
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+
+  redis:
+    container_name: redis
+    image: redis:latest
+    env_file:
+      - .env-prod
+
+  backend:
+    container_name: backend
+    depends_on:
+      - db
+      - redis
+    image: itsmeemichka/print_store
+    ports:
+      - 8888:8000
+    env_file:
+      - .env-prod
+    command: bash -c "aerich upgrade && gunicorn main:app --worker-class uvicorn.workers.UvicornWorker --bind=0.0.0.0:8000"
+    volumes:
+      - media:/app/media
+
+  celery:
+    container_name: celery
+    depends_on:
+      - db
+      - redis
+      - backend
+    image: itsmeemichka/print_store
+    env_file:
+      - .env-prod
+    command: 'celery -A tasks.celery:celery worker --loglevel=INFO'
+
+volumes:
+  pg_data:
+  media:
