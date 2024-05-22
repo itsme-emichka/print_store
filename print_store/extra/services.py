@@ -4,7 +4,7 @@ from tortoise.exceptions import IntegrityError
 from tortoise.query_utils import Prefetch
 
 from extra.http_exceptions import Error404, AlreadyExistsError
-from extra.utils import save_image_from_base64
+from extra.utils import save_image_from_base64, get_final_article_of_pattern_var
 from models.pattern import (
     Pattern,
     PatternVariation,
@@ -121,12 +121,18 @@ async def create_variation(
     )
     colors_list = await add_colors_to_variation(variation, colors)
     images_list = await add_images_to_variation(variation, images, base_url)
+    parent_pattern = await get_parent_pattern(parent_pattern_id)
 
     return PatternVariationSchema(
         id=variation.id,
         number_of_variation=number_of_variation,
         colors=colors_list,
         images=images_list,
+        final_article=get_final_article_of_pattern_var(
+            parent_pattern.article,
+            variation.number_of_variation,
+            parent_pattern.section.article_marker
+        )
     )
 
 

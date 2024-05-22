@@ -3,7 +3,8 @@ from typing import Any
 
 from fastapi import APIRouter, Request, HTTPException, status
 from schemas.order import OrderForm
-from extra.utils import make_html_list_of_items, send_message
+from extra.utils import make_html_list_of_items  # , send_message
+from tasks.celery import send_message
 
 from config import CORPORATE_MAIL
 
@@ -36,6 +37,6 @@ async def make_order(user_data: OrderForm, request: Request):
     {request.session['cart']['total_price']}
     '''
 
-    send_message(CORPORATE_MAIL, 'Заказ', html)
+    send_message.delay(CORPORATE_MAIL, 'Заказ', html)
 
     return 'Заказ оформлен'

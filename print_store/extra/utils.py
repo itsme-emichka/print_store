@@ -1,19 +1,13 @@
 import random
 import string
 import base64
-import smtplib
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
 from hashlib import sha256
 
 from config import (
     MEDIA_ROOT,
     MEDIA_URL,
-    SENDER_EMAIL,
-    SENDER_PASSWORD
 )
 from schemas.order import CartItem
-from extra.http_exceptions import MailingError
 
 
 def save_image_from_base64(base64_data: str, base_url: str) -> str:
@@ -24,7 +18,11 @@ def save_image_from_base64(base64_data: str, base_url: str) -> str:
     img_name = sha256(imgstr.encode()).hexdigest()
     image_url = f'{base_url}{MEDIA_URL}{img_name}.{ext}'
     with open(MEDIA_ROOT / f'{img_name}.{ext}', 'wb') as file:
-        file.write(base64.b64decode(imgstr))
+        try:
+            file.write(base64.b64decode(imgstr))
+        except Exception as ex:
+            print(ex)
+            return None
     return image_url
 
 
@@ -58,33 +56,3 @@ def make_html_list_of_items(items: dict[int, CartItem]) -> str:
         final_html += f'{item_html}<br>'
 
     return final_html
-
-
-def send_message(
-    reciever: str,
-    subject: str,
-    html_message: str,
-) -> bool:
-    msg = MIMEMultipart('alternative')
-    msg['Subject'] = subject
-    msg['From'] = SENDER_EMAIL
-    msg['To'] = reciever
-
-    text = MIMEText(html_message, 'html')
-    msg.attach(text)
-
-    try:
-        smtp = smtplib.SMTP('smtp.yandex.ru', 587)
-        smtp.ehlo()
-        smtp.starttls()
-        smtp.login(SENDER_EMAIL, SENDER_PASSWORD)
-        smtp.sendmail(
-            from_addr=SENDER_EMAIL,
-            to_addrs=reciever,
-            msg=msg.as_string(),
-        )
-        smtp.quit()
-        return True
-    except Exception as ex:
-        print(ex)
-        raise MailingError

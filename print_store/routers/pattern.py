@@ -148,6 +148,7 @@ async def add_variation(
         body.colors,
         body.images,
         request.base_url,
+        body.number_of_variation,
     )
 
 
