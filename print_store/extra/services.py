@@ -4,7 +4,10 @@ from tortoise.exceptions import IntegrityError
 from tortoise.query_utils import Prefetch
 
 from extra.http_exceptions import Error404, AlreadyExistsError
-from extra.utils import save_image_from_base64, get_final_article_of_pattern_var
+from extra.utils import (
+    save_image_from_base64,
+    get_final_article_of_pattern_var
+)
 from models.pattern import (
     Pattern,
     PatternVariation,
